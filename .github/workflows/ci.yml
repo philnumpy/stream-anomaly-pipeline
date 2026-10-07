@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    env:
+      REDIS_URL: redis://localhost:6379/0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install dependencies
+        run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -r requirements.txt
+      - name: Run tests
+        run: python -m pytest tests -v
+
+  docker:
+    # Builds the Compose stack with 3 API replicas and 3 workers, replays real
+    # test data through it, kills one replica and one worker mid-run, and
+    # checks that every reading was still scored.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install load generator dependencies
+        run: pip install httpx numpy
+
+      - name: Download test data for 4 machines
+        run: |
+          mkdir -p data_src/ServerMachineDataset/test
+          for m in machine-1-1 machine-1-2 machine-1-3 machine-1-4; do
+            curl -sSfL -o "data_src/ServerMachineDataset/test/$m.txt" \
+              "https://raw.githubusercontent.com/NetManAIOps/OmniAnomaly/master/ServerMachineDataset/test/$m.txt"
+          done
+
+      - name: Start the stack
+        run: docker compose up -d --build --scale api=3 --scale worker=3
+
+      - name: Wait for the load balancer
+        run: |
+          for i in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:8080/health > /dev/null; then exit 0; fi
+            sleep 2
+          done
+          docker compose ps
+          docker compose logs --tail 50
+          exit 1
+
+      - name: Replay data and kill a replica and a worker mid-run
+        run: |
+          python scripts/replay.py --machines 4 --readings 3000 > replay.json &
+          REPLAY=$!
+          sleep 3
+          docker kill "$(docker compose ps -q api | head -n 1)"
+          docker kill "$(docker compose ps -q worker | head -n 1)"
+          wait $REPLAY
+          cat replay.json
+
+      - name: Check that nothing was lost
+        run: python scripts/ci_check.py --machines 4 --readings 3000
+
+      - name: Logs on failure
+        if: failure()
+        run: |
+          docker compose ps -a
+          docker compose logs --tail 80

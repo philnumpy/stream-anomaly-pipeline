@@ -10,6 +10,7 @@ tables are keyed on (machine_id, ts), doing a job twice changes nothing.
 import json
 import os
 import signal
+import socket
 import time
 from collections import defaultdict
 
@@ -28,7 +29,9 @@ from .config import (
     WINDOW,
 )
 
-NAME = os.environ.get("WORKER_NAME", f"worker-{os.getpid()}")
+# Must be unique per worker: the consumer group tells workers apart by name.
+# In containers every worker has the same PID, so the hostname is included.
+NAME = os.environ.get("WORKER_NAME", f"worker-{socket.gethostname()}-{os.getpid()}")
 BATCH = 128
 
 

@@ -1,0 +1,11 @@
+.git
+.github
+data_src
+tools
+logs
+results
+tests
+scripts
+anomaly
+**/__pycache__
+artifacts/*.scores.npy

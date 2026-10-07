@@ -6,6 +6,7 @@ it safe to run any number of replicas and to lose one mid-flight.
 """
 
 import os
+import socket
 import time
 from contextlib import asynccontextmanager
 
@@ -26,7 +27,7 @@ from .config import (
     WINDOW,
 )
 
-REPLICA = os.environ.get("REPLICA_NAME", "api")
+REPLICA = os.environ.get("REPLICA_NAME", socket.gethostname())
 
 # Runs atomically inside Redis. Appends one reading to its machine's sliding
 # window and, once the window is full, queues a scoring job that carries the
