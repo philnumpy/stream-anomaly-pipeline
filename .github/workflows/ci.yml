@@ -63,16 +63,16 @@ jobs:
 
       - name: Replay data and kill a replica and a worker mid-run
         run: |
-          python scripts/replay.py --machines 4 --readings 3000 > replay.json &
+          python scripts/replay.py --machines 4 --readings 20000 > replay.json &
           REPLAY=$!
-          sleep 3
+          sleep 8
           docker kill "$(docker compose ps -q api | head -n 1)"
           docker kill "$(docker compose ps -q worker | head -n 1)"
           wait $REPLAY
           cat replay.json
 
       - name: Check that nothing was lost
-        run: python scripts/ci_check.py --machines 4 --readings 3000
+        run: python scripts/ci_check.py --machines 4 --readings 20000 --timeout 300
 
       - name: Logs on failure
         if: failure()
