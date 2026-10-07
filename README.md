@@ -1,5 +1,7 @@
 # Real-Time Stream Processing Pipeline with Deep Learning Anomaly Detection
 
+[![CI](https://github.com/philnumpy/stream-anomaly-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/philnumpy/stream-anomaly-pipeline/actions/workflows/ci.yml)
+
 Simulated servers send their monitoring metrics to a load-balanced ingestion
 API. The readings flow through a Redis stream to a pool of workers, which
 score every reading with an LSTM autoencoder and store anomalies in
@@ -122,6 +124,20 @@ Request latency under this load was p50 121 ms and p95 682 ms, which reflects
 28 clients saturating two cores, not the cost of one request: with 4 machines
 sending, it was p50 20 ms and p95 35 ms.
 
+### Continuous integration
+
+Every push runs two jobs on GitHub Actions (`.github/workflows/ci.yml`):
+
+- **tests**: the unit and ingestion tests, with Redis as a service.
+- **docker**: builds the Compose stack with 3 API replicas and 3 workers,
+  replays 80,000 readings from 4 machines through Nginx, kills one API
+  replica and one worker 8 seconds in, and fails unless every reading was
+  scored.
+
+A representative run on a 4-core hosted runner: 79,804 of 79,804 readings
+scored, no failed client requests, 2,915 readings/s. The killed replica had
+served 702 requests when it died; the two survivors served 3,659 and 3,639.
+
 ### Model
 
 All 28 machines, one model each (`results/smd_results.json`):
@@ -197,8 +213,8 @@ that are already done; add `--force` to retrain.
 docker compose up --build --scale api=3 --scale worker=3
 ```
 
-Note: the Compose setup mirrors Option B but has not been run end to end yet;
-all results in this README come from Option B.
+This is the setup CI runs on every push (see "Continuous integration" below).
+The benchmark tables in this README come from Option B.
 
 **Option B: local processes (Windows, no Docker)**
 
