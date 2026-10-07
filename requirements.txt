@@ -3,3 +3,4 @@
 torch
 scikit-learn
 httpx
+pytest

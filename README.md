@@ -250,7 +250,18 @@ python scripts/bench.py load   --orphan 300                    # jobs abandoned 
 
 Each one prints a summary and saves it under `results/`.
 
-### 6. Stop
+### 6. Run the tests
+
+```
+python -m pytest tests
+```
+
+The metric and model tests run anywhere. The ingestion tests (window fills
+before a job is queued, resent readings are ignored, malformed readings are
+rejected) need Redis, so run them with the stack up; otherwise they are
+skipped.
+
+### 7. Stop
 
 ```
 python scripts/stack.py down

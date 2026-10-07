@@ -11,3 +11,4 @@ logs/
 
 # per-reading score dumps are large and reproducible
 artifacts/*.scores.npy
+.pytest_cache/
