@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anomaly Alerts</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 900px; padding: 0 1rem; color: #1a1a1a; }
+  h1 { font-size: 1.3rem; }
+  .tiles { display: flex; gap: 1rem; margin: 1rem 0; }
+  .tile { border: 1px solid #ddd; border-radius: 8px; padding: .75rem 1rem; flex: 1; }
+  .tile b { display: block; font-size: 1.5rem; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+  th, td { text-align: left; padding: .4rem .6rem; border-bottom: 1px solid #eee; }
+  small { color: #666; }
+</style>
+</head>
+<body>
+<h1>Anomaly alerts <small id="replica"></small></h1>
+<div class="tiles">
+  <div class="tile"><b id="scored">-</b>readings scored</div>
+  <div class="tile"><b id="anomalies">-</b>anomalies flagged</div>
+</div>
+<table>
+  <thead><tr><th>Machine</th><th>Reading #</th><th>Score</th><th>Top metrics</th><th>Detected</th></tr></thead>
+  <tbody id="rows"></tbody>
+</table>
+<script>
+async function refresh() {
+  const [stats, alerts] = await Promise.all([
+    fetch('/stats').then(r => r.json()),
+    fetch('/alerts?limit=30').then(r => r.json()),
+  ]);
+  document.getElementById('scored').textContent = stats.readings_scored.toLocaleString();
+  document.getElementById('anomalies').textContent = stats.anomalies.toLocaleString();
+  document.getElementById('replica').textContent = 'served by ' + stats.replica;
+  const rows = document.getElementById('rows');
+  rows.replaceChildren(...alerts.map(a => {
+    const tr = document.createElement('tr');
+    const cells = [a.machine_id, a.ts, a.score.toFixed(4), a.top_metrics.join(', '),
+                   new Date(a.created_at).toLocaleTimeString()];
+    for (const c of cells) { const td = document.createElement('td'); td.textContent = c; tr.appendChild(td); }
+    return tr;
+  }));
+}
+refresh();
+setInterval(refresh, 2000);
+</script>
+</body>
+</html>

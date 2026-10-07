@@ -1,0 +1,45 @@
+{
+  "ingest": {
+    "machines": 28,
+    "readings_sent": 56000,
+    "seconds": 44.83,
+    "readings_per_second": 1249.2,
+    "requests_per_second": 124.9,
+    "request_latency_ms": {
+      "p50": 114.8,
+      "p95": 691.3,
+      "p99": 1246.3
+    },
+    "retries": 0,
+    "status": {},
+    "replicas": {
+      "api-3": 2160,
+      "api-1": 2161,
+      "api-2": 1279
+    }
+  },
+  "pipeline": {
+    "expected_scores": 54628,
+    "scored": 54628,
+    "lost": 0,
+    "anomalies_flagged": 656,
+    "end_to_end_seconds": 45.58,
+    "scored_per_second": 1198.6,
+    "detection_delay_ms": {
+      "p50": 6.0,
+      "p95": 10.0,
+      "p99": 15.0
+    },
+    "scored_by_worker": {
+      "worker-1": 18205,
+      "worker-2": 18356,
+      "worker-3": 18067
+    },
+    "backlog_left": 0
+  },
+  "killed": {
+    "process": "api-2",
+    "after_scores": 18288,
+    "restarted_after_s": 5
+  }
+}

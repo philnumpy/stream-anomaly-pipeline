@@ -1,0 +1,63 @@
+# docker compose up --build --scale api=3 --scale worker=3
+#
+# Same architecture as scripts/stack.py, in containers. Nginx finds the API
+# replicas through Docker's DNS (see nginx/nginx.docker.conf).
+
+x-app-env: &app-env
+  REDIS_URL: redis://redis:6379/0
+  DATABASE_URL: postgresql://anomaly:anomaly@postgres:5432/anomaly
+
+services:
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: anomaly
+      POSTGRES_PASSWORD: anomaly
+      POSTGRES_DB: anomaly
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U anomaly"]
+      interval: 2s
+      retries: 15
+
+  init:
+    build: .
+    environment: *app-env
+    command: >
+      python -c "import json; from app import db;
+      db.init_schema(json.load(open('artifacts/thresholds.json')))"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    build: .
+    environment: *app-env
+    command: ["uvicorn", "app.ingest_api:app", "--host", "0.0.0.0", "--port", "8000"]
+    depends_on:
+      init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+
+  worker:
+    build: .
+    environment: *app-env
+    command: ["python", "-m", "app.worker"]
+    depends_on:
+      init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+
+  nginx:
+    image: nginx:1.28-alpine
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx/nginx.docker.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api

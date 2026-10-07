@@ -1,0 +1,36 @@
+{
+  "ingest": {
+    "machines": 28,
+    "readings_sent": 56000,
+    "seconds": 38.1,
+    "readings_per_second": 1469.7,
+    "requests_per_second": 147.0,
+    "request_latency_ms": {
+      "p50": 99.1,
+      "p95": 582.5,
+      "p99": 1055.5
+    },
+    "retries": 0,
+    "status": {},
+    "replicas": {
+      "api-1": 5600
+    }
+  },
+  "pipeline": {
+    "expected_scores": 54628,
+    "scored": 54628,
+    "lost": 0,
+    "anomalies_flagged": 656,
+    "end_to_end_seconds": 38.81,
+    "scored_per_second": 1407.6,
+    "detection_delay_ms": {
+      "p50": 8.0,
+      "p95": 41.0,
+      "p99": 85.0
+    },
+    "scored_by_worker": {
+      "worker-1": 54628
+    },
+    "backlog_left": 0
+  }
+}

@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+
+# downloaded dataset (see README for where it comes from)
+data_src/
+
+# local Redis / Nginx binaries and the PostgreSQL data folder
+tools/
+logs/
+
+# per-reading score dumps are large and reproducible
+artifacts/*.scores.npy

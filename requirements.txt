@@ -1,0 +1,5 @@
+# Training, evaluation and the benchmark scripts.
+-r requirements-serve.txt
+torch
+scikit-learn
+httpx
